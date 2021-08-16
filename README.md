@@ -59,6 +59,11 @@ Start sending emails:
       .
       quit
 
+To run a basic test, sending an email to a user and checking in logs for corect departure use these commands:
+``` sh
+    chmod +x test.sh
+    ./test.sh
+```
 
 ## Supported environment variables
 
