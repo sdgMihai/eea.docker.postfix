@@ -1,0 +1,64 @@
+#!/usr/bin/expect -f
+
+set force_conservative 0  ;# set to 1 to force conservative mode even if
+			  ;# script wasn't run conservatively originally
+if {$force_conservative} {
+	set send_slow {1 .1}
+	proc send {ignore arg} {
+		sleep .1
+		exp_send -s -- $arg
+	}
+}
+
+
+set timeout -1
+spawn docker exec -it client sh
+match_max 100000
+expect -exact "/ # \r/ # \[J"
+send -- "telnet server 25\r"
+expect -exact "telnet server 25\r
+Connected to server\r
+220 foo.com ESMTP Postfix\r\r
+"
+sleep 1
+send -- "helo foo.com\r"
+expect -exact "helo foo.com\r
+250 foo.com\r\r
+"
+send -- "MAIL FROM: bar@foo.com"
+expect -exact "MAIL FROM: bar@foo.com"
+send -- "\r"
+expect -exact "\r
+250 2.1.0 Ok\r\r
+"
+send -- "RCPT TO:"
+expect -exact "RCPT TO:"
+send -- " incoming@foo.com\r"
+expect -exact " incoming@foo.com\r
+250 2.1.5 Ok\r\r
+"
+send -- "DATA\r"
+expect -exact "DATA\r
+354 End data with <CR><LF>.<CR><LF>\r\r
+"
+send -- "subject: Test"
+expect -exact "subject: Test"
+send -- "\r"
+expect -exact "\r
+"
+send -- "Testing 1, 2, 3"
+expect -exact "Testing 1, 2, 3"
+send -- "\r"
+expect -exact "\r
+"
+send -- ".\r"
+expect -re "(?n).\r
+250 2.0.0 Ok: queued .*as \[A-Z0-9\]+\r\r$
+"
+send -- "quit\r"
+expect -exact "quit\r
+221 2.0.0 Bye\r\r
+Connection closed by foreign host\r\r
+/ # "
+send -- "exit\r"
+expect eof

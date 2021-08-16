@@ -1,0 +1,12 @@
+version: "3.1"
+services:
+  server:
+    image: eeacms/postfix:latest
+    container_name: server
+    environment: 
+      - MTP_HOST=foo.com
+
+  client:
+    image: busybox:1.33.1
+    container_name: client
+    command: sh -c "tail -f /dev/null"
